@@ -1,0 +1,16 @@
+{
+  "name": "easy_lover_backend",
+  "version": "1.0.0",
+  "description": "Backend for easy_lover",
+  "main": "app.js",
+  "scripts": {
+    "test": "node app.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "express-ws": "^4.0.0",
+    "helmet": "^3.18.0"
+  }
+}
