@@ -25,6 +25,19 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false
       },
       questionsJson: {
+        // Store each question's text and an array of options.
+        //   {
+        //     questions: [
+        //     {
+        //       text: "What is your favorite color?",
+        //       options: ["Blue", "Yellow", "Green", "Red"]
+        //     },
+        //     {
+        //       text: "What is your favorite alcohol?",
+        //       options: ["Beer", "Wine", "Vermouth", "Gin"]
+        //     }
+        //   ]
+        // }
         type: DataTypes.STRING(256),
         field: "questionsJson",
         allowNull: false,

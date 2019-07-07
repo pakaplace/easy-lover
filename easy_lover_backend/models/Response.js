@@ -24,7 +24,9 @@ module.exports = (sequelize, DataTypes) => {
         field: "idNumber",
         allowNull: false
       },
-      questionsJson: {
+      answersJson: {
+        // Array of question answers in sequential order. We can return the string of the answer, or a numerical representation.
+        // {answers: ["Blue", "Gin"]} }
         type: DataTypes.STRING(256),
         field: "questionsJson",
         allowNull: false,
