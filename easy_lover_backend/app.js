@@ -5,6 +5,33 @@ var router = express.Router();
 const port = process.env.PORT || 4000;
 const helmet = require("helmet");
 
+require("dotenv").load();
+const Sequelize = require("sequelize");
+
+let sequelize;
+
+const loggingOpts = {
+  0: false,
+  1: console.log
+  // other levels can define custom functions as needed
+};
+
+if (process.env.NODE_ENV === "test") {
+  console.log("Reached test node env");
+  sequelize = new Sequelize(process.env.DATABASE_URL, {
+    dialect: "postgres",
+    operatorsAliases: false,
+    logging: loggingOpts[process.env.SEQUELIZE_LOGGING || 0],
+    protocol: "postgres",
+    dialectOptions: {
+      ssl: true,
+      statement_timeout: 5000
+    },
+    define: {
+      paranoid: true
+    }
+  });
+}
 app.use(helmet());
 
 app.use(function(req, res, next) {
