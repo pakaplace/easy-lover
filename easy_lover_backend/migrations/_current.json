@@ -1,0 +1,17 @@
+{
+    "tables": {
+        "Response": {
+            "tableName": "Response",
+            "indexes": []
+        },
+        "Survey": {
+            "tableName": "Survey",
+            "indexes": []
+        },
+        "User": {
+            "tableName": "User",
+            "indexes": []
+        }
+    },
+    "revision": 1
+}

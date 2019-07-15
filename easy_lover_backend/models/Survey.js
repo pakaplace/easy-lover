@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-  const Surve3y = sequelize.define(
+  const Survey = sequelize.define(
     "Survey",
     {
       id: {
@@ -52,11 +52,10 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   Survey.associate = model => {
-    const { User, Response } = model;
-
+    const { Response } = model;
     Survey.hasMany(Response, {
       as: "responses",
-      foreignKey: "surveyId",
+      foreignKey: "responseId",
       onDelete: "NO ACTION",
       onUpdate: "NO ACTION"
     });

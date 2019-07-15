@@ -24,14 +24,19 @@ if (process.env.NODE_ENV === "test") {
     }
   });
 } else {
-  console.log("should be reached");
+  console.log("NODE_ENV not defined");
+  console.log(
+    process.env.POSTGRES_DB,
+    process.env.POSTGRES_HOST,
+    process.env.POSTGRES_PORT
+  );
   sequelize = new Sequelize({
     // username: process.env.POSTGRES_USER,
     // password: process.env.POSTGRES_PW,
-    // database: process.env.POSTGRES_DB,
+    database: process.env.POSTGRES_DB,
     host: process.env.POSTGRES_HOST,
-    dialect: "postgres"
-    // port: process.env.POSTGRES_PORT || "5432",
+    dialect: "postgres",
+    port: process.env.POSTGRES_PORT || "5432"
     // operatorsAliases: false,
     // logging: loggingOpts[process.env.SEQUELIZE_LOGGING || 0]
     // dialectOptions: {
@@ -43,17 +48,10 @@ if (process.env.NODE_ENV === "test") {
   });
 }
 
-console.log(
-  "Sequelize ",
-  process.env.POSTGRES_USER,
-  process.env.POSTGRES_PW,
-  process.env.POSTGRES_DB,
-  process.env.POSTGRES_HOST
-);
 sequelize
   .authenticate() //{ username: process.env.POSTGRES_USER, password: process.env.POSTGRES_PW }
   .then(function(err) {
-    console.log("Connection has been established successfully.");
+    console.log("DB Connection has been established :D");
   })
   .catch(function(err) {
     console.log("Unable to connect to the database:", err);

@@ -15,9 +15,15 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false
       },
       userId: {
-        type: DataTypes.STRING(256),
-        field: "status",
-        allowNull: false
+        type: DataTypes.UUID,
+        field: "userId",
+        allowNull: false,
+        // references: {
+        //   model: "User",
+        //   key: "id"
+        // },
+        onUpdate: "NO ACTION",
+        onDelete: "NO ACTION"
       },
       idNumber: {
         type: DataTypes.STRING(256),
@@ -29,8 +35,7 @@ module.exports = (sequelize, DataTypes) => {
         // {answers: ["Blue", "Gin"]} }
         type: DataTypes.STRING(256),
         field: "questionsJson",
-        allowNull: false,
-        unique: true
+        allowNull: false
       }
     },
     {
@@ -41,11 +46,11 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   Response.associate = model => {
-    const { Survey } = model;
+    const { Survey, User } = model;
 
     Response.belongsTo(Survey, {
       as: "Survey",
-      foreignKey: "surveyId",
+      foreignKey: "responseId",
       onDelete: "NO ACTION",
       onUpdate: "NO ACTION"
     });
