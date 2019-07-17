@@ -13,6 +13,9 @@ models.sequelize.sync();
 app.use(helmet());
 app.use(require("./middlewares/BodyParser"));
 
+app.get("/", (req, res, next) => {
+  res.sendStatus(200);
+});
 // User Routes
 app.post("/user", async (req, res, next) => {
   const { userFields } = req.body;
