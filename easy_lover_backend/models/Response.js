@@ -1,3 +1,5 @@
+const { responseTypeEnum } = require("../enum/DataTypeEnum");
+
 module.exports = (sequelize, DataTypes) => {
   const Response = sequelize.define(
     "Response",
@@ -10,31 +12,28 @@ module.exports = (sequelize, DataTypes) => {
         autoIncrement: true
       },
       surveyId: {
-        type: DataTypes.STRING(256),
-        field: "name",
+        type: DataTypes.INTEGER,
+        field: "surveyId",
         allowNull: false
       },
       userId: {
         type: DataTypes.UUID,
         field: "userId",
-        allowNull: false,
-        // references: {
-        //   model: "User",
-        //   key: "id"
-        // },
+        allowNull: true,
         onUpdate: "NO ACTION",
         onDelete: "NO ACTION"
-      },
-      idNumber: {
-        type: DataTypes.STRING(256),
-        field: "idNumber",
-        allowNull: false
       },
       answersJson: {
         // Array of question answers in sequential order. We can return the string of the answer, or a numerical representation.
         // {answers: ["Blue", "Gin"]} }
-        type: DataTypes.STRING(256),
+        type: DataTypes.JSONB,
         field: "questionsJson",
+        allowNull: false
+      },
+      type: {
+        type: DataTypes.ENUM,
+        values: Object.values(responseTypeEnum),
+        field: "type",
         allowNull: false
       }
     },
@@ -50,7 +49,7 @@ module.exports = (sequelize, DataTypes) => {
 
     Response.belongsTo(Survey, {
       as: "Survey",
-      foreignKey: "responseId",
+      foreignKey: "surveyId",
       onDelete: "NO ACTION",
       onUpdate: "NO ACTION"
     });

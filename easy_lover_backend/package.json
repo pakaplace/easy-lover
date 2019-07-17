@@ -4,7 +4,8 @@
   "description": "Backend for easy_lover",
   "main": "app.js",
   "scripts": {
-    "test": "node app.js"
+    "test": "node app.js",
+    "start": "nodemon app.js"
   },
   "author": "",
   "license": "ISC",
@@ -19,6 +20,8 @@
     "pg": "^7.11.0",
     "pg-hstore": "^2.3.3",
     "sequelize": "^5.9.4",
-    "sequelize-auto-migrations": "^1.0.3"
+    "sequelize-auto-migrations": "^1.0.3",
+    "socket.io": "^2.2.0",
+    "ws": "^7.1.0"
   }
 }

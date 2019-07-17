@@ -17,12 +17,12 @@ module.exports = (sequelize, DataTypes) => {
       status: {
         type: DataTypes.STRING(256),
         field: "status",
-        allowNull: false
+        allowNull: true
       },
       idNumber: {
         type: DataTypes.STRING(256),
         field: "idNumber",
-        allowNull: false
+        allowNull: true
       },
       questionsJson: {
         // Store each question's text and an array of options.
@@ -38,10 +38,10 @@ module.exports = (sequelize, DataTypes) => {
         //     }
         //   ]
         // }
-        type: DataTypes.STRING(256),
+        type: DataTypes.JSONB,
         field: "questionsJson",
         allowNull: false,
-        unique: true
+        unique: false
       }
     },
     {
