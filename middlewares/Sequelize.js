@@ -10,19 +10,25 @@ const loggingOpts = {
 };
 
 if (process.env.NODE_ENV === "local") {
-  sequelize = new Sequelize(process.env.DATABASE_URL, {
+  sequelize = new Sequelize({
+    database: process.env.POSTGRES_DB,
+    host: process.env.POSTGRES_HOST,
     dialect: "postgres",
-    operatorsAliases: false,
-    logging: loggingOpts[process.env.SEQUELIZE_LOGGING || 0],
-    protocol: "postgres",
-    dialectOptions: {
-      ssl: true,
-      statement_timeout: 5000
-    },
-    define: {
-      paranoid: true
-    }
+    port: process.env.POSTGRES_PORT || "5432"
   });
+  // sequelize = new Sequelize(process.env.DATABASE_URL, {
+  //   dialect: "postgres",
+  //   operatorsAliases: false,
+  //   logging: loggingOpts[process.env.SEQUELIZE_LOGGING || 0],
+  //   protocol: "postgres",
+  //   dialectOptions: {
+  //     ssl: true,
+  //     statement_timeout: 5000
+  //   },
+  //   define: {
+  //     paranoid: true
+  //   }
+  // });
 } else {
   sequelize = new Sequelize(process.env.POSTGRES_URL, {
     dialect: "postgres",

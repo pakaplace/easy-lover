@@ -1,6 +1,7 @@
 const { responseTypeEnum } = require("../enum/DataTypeEnum");
 
 module.exports = (sequelize, DataTypes) => {
+  console.log(responseTypeEnum);
   const Response = sequelize.define(
     "Response",
     {
@@ -27,7 +28,7 @@ module.exports = (sequelize, DataTypes) => {
         // Array of question answers in sequential order. We can return the string of the answer, or a numerical representation.
         // {answers: ["Blue", "Gin"]} }
         type: DataTypes.JSONB,
-        field: "questionsJson",
+        field: "answersJson",
         allowNull: false
       },
       type: {
