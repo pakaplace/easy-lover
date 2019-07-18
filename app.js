@@ -7,11 +7,11 @@ const helmet = require("helmet");
 const { Survey, User, Response, Interaction } = require("./models");
 const { Op } = require("sequelize");
 const models = require("./models/index");
-var Twilio = require("twilio");
-const twilioClient = new Twilio(
-  process.env.TWILIO_SID,
-  process.env.TWILIO_TEST_TOKEN
-);
+// var Twilio = require("twilio");
+// const twilioClient = new Twilio(
+//   process.env.TWILIO_SID,
+//   process.env.TWILIO_TEST_TOKEN
+// );
 models.sequelize.sync({ force: true });
 // Middleware
 app.use(helmet());
@@ -75,20 +75,20 @@ app.put("/user/:id", async (req, res, next) => {
   }
 });
 
-app.post("/sendMessage", async (req, res, next) => {
-  console.log("sending message....", twilioClient.messages);
-  try {
-    let message = await twilioClient.messages.create({
-      body: "Find your match?",
-      from: process.env.TWILIO_NUMBER,
-      to: "+18137657071"
-    });
-    console.log("Message~~~~~~~~~~~~~~", message.sid);
-    return res.status(200).send({ message });
-  } catch (err) {
-    res.status(206).send({ err });
-  }
-});
+// app.post("/sendMessage", async (req, res, next) => {
+//   console.log("sending message....", twilioClient.messages);
+//   try {
+//     let message = await twilioClient.messages.create({
+//       body: "Find your match?",
+//       from: process.env.TWILIO_NUMBER,
+//       to: "+18137657071"
+//     });
+//     console.log("Message~~~~~~~~~~~~~~", message.sid);
+//     return res.status(200).send({ message });
+//   } catch (err) {
+//     res.status(206).send({ err });
+//   }
+// });
 // Returns user data and response
 app.get("/user/:id", async (req, res, next) => {
   const { id } = req.params;
