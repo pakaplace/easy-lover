@@ -7,12 +7,7 @@ const helmet = require("helmet");
 const { Survey, User, Response, Interaction } = require("./models");
 const { Op } = require("sequelize");
 const models = require("./models/index");
-// var Twilio = require("twilio");
-// const twilioClient = new Twilio(
-//   process.env.TWILIO_SID,
-//   process.env.TWILIO_TEST_TOKEN
-// );
-models.sequelize.sync({ force: true });
+models.sequelize.sync();
 // Middleware
 app.use(helmet());
 app.use(require("./middlewares/BodyParser"));
