@@ -24,9 +24,9 @@ module.exports = (sequelize, DataTypes) => {
         onUpdate: "NO ACTION",
         onDelete: "NO ACTION"
       },
+      // Array of question answers in sequential order. We can return the string of the answer, or a numerical representation.
+      // {answers: ["Blue", "Gin"]} }
       answersJson: {
-        // Array of question answers in sequential order. We can return the string of the answer, or a numerical representation.
-        // {answers: ["Blue", "Gin"]} }
         type: DataTypes.JSONB,
         field: "answersJson",
         allowNull: false

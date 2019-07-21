@@ -32,27 +32,27 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         field: "compatibilityScore",
         allowNull: true
-      },
-      question1: {
-        type: DataTypes.INTEGER,
-        field: "question1",
-        allowNull: true
-      },
-      question2: {
-        type: DataTypes.INTEGER,
-        field: "question2",
-        allowNull: true
-      },
-      question3: {
-        type: DataTypes.INTEGER,
-        field: "question3",
-        allowNull: true
-      },
-      question4: {
-        type: DataTypes.STRING(256),
-        field: "question4",
-        allowNull: true
       }
+      // question1: {
+      //   type: DataTypes.INTEGER,
+      //   field: "question1",
+      //   allowNull: true
+      // },
+      // question2: {
+      //   type: DataTypes.INTEGER,
+      //   field: "question2",
+      //   allowNull: true
+      // },
+      // question3: {
+      //   type: DataTypes.INTEGER,
+      //   field: "question3",
+      //   allowNull: true
+      // },
+      // question4: {
+      //   type: DataTypes.STRING(256),
+      //   field: "question4",
+      //   allowNull: true
+      // }
     },
     {
       schema: "public",

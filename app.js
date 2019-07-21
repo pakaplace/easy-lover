@@ -7,6 +7,10 @@ const helmet = require("helmet");
 const { Survey, User, Response, Interaction } = require("./models");
 const { Op } = require("sequelize");
 const models = require("./models/index");
+const client = require("twilio")(
+  process.env.TWILIO_PROD_SID,
+  process.env.TWILIO_PROD_TOKEN
+);
 models.sequelize.sync();
 // Middleware
 app.use(helmet());
@@ -14,6 +18,27 @@ app.use(require("./middlewares/BodyParser"));
 
 app.get("/", (req, res, next) => {
   res.status(200).send("hello jon");
+});
+
+app.get("/sendlink/:phoneNumber", async (req, res, next) => {
+  const { User } = models;
+  let foundUser = await User.findOne({ phoneNumber: req.params.phoneNumber });
+  if (!foundUser) {
+    return res
+      .status(206)
+      .send({ error: "No user with that phone number was found." });
+  }
+  try {
+    let message = await client.messages.create({
+      body: "Find your match?",
+      from: process.env.TWILIO_PROD_NUMBER,
+      to: foundUser.phoneNumber
+    });
+    return res.status(200).send({ message });
+  } catch (error) {
+    console.error("Error sendingLink", error);
+    res.status(206).send({ error });
+  }
 });
 // User Routes
 app.post("/user", async (req, res, next) => {
@@ -48,6 +73,7 @@ app.post("/user", async (req, res, next) => {
     return res.status(206).send({ error: e.message });
   }
 });
+
 app.put("/user/:id", async (req, res, next) => {
   if (!req.params.id) {
     res.status(206).send({ error: "User Id required in PUT request." });
@@ -85,6 +111,7 @@ app.put("/user/:id", async (req, res, next) => {
 //   }
 // });
 // Returns user data and response
+
 app.get("/user/:id", async (req, res, next) => {
   const { id } = req.params;
   try {
@@ -104,6 +131,9 @@ app.get("/user/:id", async (req, res, next) => {
         }
       ]
     });
+    //return hardcoded single survey questions and id
+
+    //send url to user's phone number
     if (foundUser) return res.status(200).send({ user: foundUser });
     else {
       res.status(200).send({ error: "No user exists" });
