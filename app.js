@@ -30,9 +30,7 @@ app.get("/sendlink/:phoneNumber", async (req, res, next) => {
   }
   try {
     let message = await client.messages.create({
-      body: `Your link is https://${process.env.HOST_URL}/${
-        foundUser.phoneNumber
-      }`,
+      body: `Your link is https://${process.env.HOST_URL}/user/${foundUser.id}`,
       from: process.env.TWILIO_PROD_NUMBER,
       to: foundUser.phoneNumber
     });
