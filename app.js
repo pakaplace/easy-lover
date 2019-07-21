@@ -30,7 +30,9 @@ app.get("/sendlink/:phoneNumber", async (req, res, next) => {
   }
   try {
     let message = await client.messages.create({
-      body: "Find your match?",
+      body: `Your link is https://${process.env.HOST_URL}/${
+        foundUser.phoneNumber
+      }`,
       from: process.env.TWILIO_PROD_NUMBER,
       to: foundUser.phoneNumber
     });
@@ -190,21 +192,38 @@ app.post("/response", async (req, res, next) => {
       where: {
         surveyId: responseFields.surveyId,
         userId: responseFields.userId
-      }
+      },
+      include: [{ model: User, as: "User" }]
     });
     if (existingResponse) {
       console.log(
         "User has already submitted a response for this survey",
         existingResponse
       );
-      res.status(206).send(existingResponse);
+      res.status(206).send({
+        error: "User has already submitted a response for this survey"
+      });
     }
     const response = await Response.create(responseFields);
     console.log("Created Response~~", response);
+
+    let foundUser = await User.findOne({ phoneNumber: req.params.phoneNumber });
+    if (!foundUser) {
+      return res
+        .status(206)
+        .send({ error: "No user with that phone number was found." });
+    }
+    let message = await client.messages.create({
+      body: `Your link is https://${process.env.HOST_URL}/${
+        foundUser.phoneNumber
+      }`,
+      from: process.env.TWILIO_PROD_NUMBER,
+      to: foundUser.phoneNumber
+    });
     res.status(200).send({ response });
-  } catch (e) {
-    console.error("Error creating response~~", e);
-    return res.status(206).send({ error: err.message });
+  } catch (error) {
+    console.error("Error creating response~~", error);
+    return res.status(206).send({ error });
   }
 });
 
