@@ -214,11 +214,11 @@ app.post("/response", async (req, res, next) => {
         .send({ error: "No user with that phone number was found." });
     }
     let message = await client.messages.create({
-      body: `Your link is https://${process.env.HOST_URL}/${
+      body: `Your link is https://${process.env.HOST_URL}/user?phoneNumber=${
         foundUser.phoneNumber
       }`,
       from: process.env.TWILIO_PROD_NUMBER,
-      to: foundUser.phoneNumber
+      to: "+1" + foundUser.phoneNumber
     });
     res.status(200).send({ response });
   } catch (error) {
