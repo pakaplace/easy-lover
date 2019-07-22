@@ -134,7 +134,7 @@ app.get("/user/:id", async (req, res, next) => {
         }
       ]
     });
-
+    console.log("Found User", foundUser);
     //send url to user's phone number
     if (foundUser) return res.status(200).send({ user: foundUser });
     else {
