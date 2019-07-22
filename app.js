@@ -112,16 +112,16 @@ app.put("/user/:id", async (req, res, next) => {
 // });
 // Returns user data and response
 
-app.get("/user/:id", async (req, res, next) => {
-  const { id } = req.params;
-  const { phoneNumber } = req.query;
+app.get("/user", async (req, res, next) => {
+  const { id, phoneNumber } = req.query;
   try {
     if (!id || !phoneNumber) {
       return res.status(400).send({ error: "You must include a User Id" });
     }
+    console.log("Phone Number", phoneNumber, id);
     const foundUser = await User.findOne({
       where: {
-        phoneNumber: phoneNumber
+        phoneNumber
       },
       include: [
         {
