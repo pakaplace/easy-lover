@@ -121,18 +121,7 @@ app.get("/user/:id", async (req, res, next) => {
     }
     const foundUser = await User.findOne({
       where: {
-        [Op.or]: [
-          {
-            id: {
-              [Op.iLike]: id
-            }
-          },
-          {
-            phoneNumber: {
-              [Op.iLike]: phoneNumber
-            }
-          }
-        ]
+        phoneNumber: phoneNumber
       },
       include: [
         {
