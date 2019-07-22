@@ -114,12 +114,26 @@ app.put("/user/:id", async (req, res, next) => {
 
 app.get("/user/:id", async (req, res, next) => {
   const { id } = req.params;
+  const { phoneNumber } = req.query;
   try {
-    if (!id) {
+    if (!id || !phoneNumber) {
       return res.status(400).send({ error: "You must include a User Id" });
     }
     const foundUser = await User.findOne({
-      where: { id },
+      where: {
+        [Op.or]: [
+          {
+            id: {
+              [Op.iLike]: id
+            }
+          },
+          {
+            phoneNumber: {
+              [Op.iLike]: phoneNumber
+            }
+          }
+        ]
+      },
       include: [
         {
           model: Response,
@@ -131,7 +145,6 @@ app.get("/user/:id", async (req, res, next) => {
         }
       ]
     });
-    //return hardcoded single survey questions and id
 
     //send url to user's phone number
     if (foundUser) return res.status(200).send({ user: foundUser });
