@@ -123,7 +123,7 @@ app.put("/user/:phoneNumber", async (req, res, next) => {
 // Returns user data and response
 
 app.get("/user/:phoneNumber", async (req, res, next) => {
-  const { phoneNumber } = req.query;
+  const { phoneNumber } = req.params;
   try {
     if (!phoneNumber) {
       return res.status(400).send({
