@@ -130,7 +130,6 @@ app.get("/user/:phoneNumber", async (req, res, next) => {
         error: "You must include a phone number the req.params"
       });
     }
-    console.log("Phone Number", phoneNumber, id);
     const foundUser = await User.findOne({
       where: {
         phoneNumber
@@ -148,7 +147,7 @@ app.get("/user/:phoneNumber", async (req, res, next) => {
     //send url to user's phone number
     if (foundUser) return res.status(200).send({ user: foundUser });
     else {
-      res.status(200).send({ error: "No user exists" });
+      res.status(200).send({ error: "No user exists with that phone number" });
     }
   } catch (err) {
     return res.status(206).send({ error: err.message });
