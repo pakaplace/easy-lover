@@ -13,7 +13,7 @@ const client = require("twilio")(
 );
 const cors = require("cors");
 
-models.sequelize.sync({ force: true });
+models.sequelize.sync();
 // Middleware
 app.use(helmet());
 app.use(require("./middlewares/BodyParser"));
@@ -141,7 +141,7 @@ app.get("/user/:id", async (req, res, next) => {
           },
           {
             phoneNumber: {
-              [Op.iLike]: userFields.phoneNumber
+              [Op.iLike]: phoneNumber
             }
           }
         ]
