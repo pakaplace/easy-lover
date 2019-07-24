@@ -140,9 +140,7 @@ app.get("/user/:id", async (req, res, next) => {
             id
           },
           {
-            phoneNumber: {
-              [Op.iLike]: phoneNumber
-            }
+            phoneNumber: phoneNumber
           }
         ]
       },
@@ -157,7 +155,39 @@ app.get("/user/:id", async (req, res, next) => {
         }
       ]
     });
-    console.log("Found User", foundUser);
+
+    const foundUser1 = await User.findOne({
+      where: {
+        phoneNumber: phoneNumber
+      },
+      include: [
+        {
+          model: Response,
+          as: "Responses",
+          // attributes: [],
+          where: {
+            userId: id
+          }
+        }
+      ]
+    });
+
+    const foundUser2 = await User.findOne({
+      where: {
+        id
+      },
+      include: [
+        {
+          model: Response,
+          as: "Responses",
+          // attributes: [],
+          where: {
+            userId: id
+          }
+        }
+      ]
+    });
+    console.log("Found User", foundUser, foundUser1);
     //send url to user's phone number
     if (foundUser) return res.status(200).send({ user: foundUser });
     else {
