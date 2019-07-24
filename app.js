@@ -92,10 +92,11 @@ app.put("/user/:phoneNumber", async (req, res, next) => {
     const { userFields } = req.body;
     let updatedUser = await User.update(userFields, {
       where: { phoneNumber },
+      returning: true,
       include: [{ model: Response, as: "Responses" }]
     });
     // const userData = await User.findOne({
-    //   where: { id: req.params.id }
+    //   where: { id:  }
     // });
     console.log("Updated User Data~ ", updatedUser);
     res.status(200).send({ user: updatedUser });
