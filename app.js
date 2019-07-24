@@ -11,10 +11,17 @@ const client = require("twilio")(
   process.env.TWILIO_PROD_SID,
   process.env.TWILIO_PROD_TOKEN
 );
+const cors = require("cors");
+
 models.sequelize.sync();
 // Middleware
 app.use(helmet());
 app.use(require("./middlewares/BodyParser"));
+var corsOptions = {
+  origin: "*",
+  optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+};
+app.use(cors(corsOptions));
 
 app.get("/", (req, res, next) => {
   res.status(200).send("hello jon");
@@ -22,7 +29,8 @@ app.get("/", (req, res, next) => {
 
 app.get("/sendlink/:phoneNumber", async (req, res, next) => {
   const { User } = models;
-  let foundUser = await User.findOne({ phoneNumber: req.params.phoneNumber });
+  const { phoneNumber } = req.params;
+  let foundUser = await User.findOne({ phoneNumber });
   if (!foundUser) {
     return res
       .status(206)
@@ -40,6 +48,7 @@ app.get("/sendlink/:phoneNumber", async (req, res, next) => {
     res.status(206).send({ error });
   }
 });
+
 // User Routes
 app.post("/user", async (req, res, next) => {
   const { userFields } = req.body;
@@ -82,8 +91,8 @@ app.put("/user/:id", async (req, res, next) => {
     const { userFields } = req.body;
     let updatedUser = await User.update(userFields, {
       where: { id: req.params.id }
-      //Add an include here, reduce to one call
     });
+
     console.log("Updated User", updatedUser[0]);
     const userData = await User.findOne({
       where: { id: req.params.id },
