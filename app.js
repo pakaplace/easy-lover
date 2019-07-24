@@ -83,7 +83,7 @@ app.post("/user", async (req, res, next) => {
   }
 });
 
-app.put("/user/:id", async (req, res, next) => {
+app.put("/user/:phoneNumber", async (req, res, next) => {
   if (!req.params.id) {
     res.status(206).send({ error: "User Id required in PUT request." });
   }
@@ -122,72 +122,29 @@ app.put("/user/:id", async (req, res, next) => {
 // });
 // Returns user data and response
 
-app.get("/user/:id", async (req, res, next) => {
-  const { id } = req.params;
+app.get("/user/:phoneNumber", async (req, res, next) => {
   const { phoneNumber } = req.query;
   try {
-    if (!id && !phoneNumber) {
+    if (!phoneNumber) {
       return res.status(400).send({
-        error:
-          "You must include a User Id in the req.params or a phone number in the query args"
+        error: "You must include a phone number the req.params"
       });
     }
     console.log("Phone Number", phoneNumber, id);
     const foundUser = await User.findOne({
       where: {
-        [Op.or]: [
-          {
-            id
-          },
-          {
-            phoneNumber: phoneNumber
-          }
-        ]
+        phoneNumber
       },
       include: [
         {
           model: Response,
-          as: "Responses",
+          as: "Responses"
           // attributes: [],
-          where: {
-            userId: id
-          }
         }
       ]
     });
 
-    const foundUser1 = await User.findOne({
-      where: {
-        phoneNumber: phoneNumber
-      },
-      include: [
-        {
-          model: Response,
-          as: "Responses",
-          // attributes: [],
-          where: {
-            userId: id
-          }
-        }
-      ]
-    });
-
-    const foundUser2 = await User.findOne({
-      where: {
-        id
-      },
-      include: [
-        {
-          model: Response,
-          as: "Responses",
-          // attributes: [],
-          where: {
-            userId: id
-          }
-        }
-      ]
-    });
-    console.log("Found User", foundUser, foundUser1);
+    console.log("Found User", foundUser);
     //send url to user's phone number
     if (foundUser) return res.status(200).send({ user: foundUser });
     else {
