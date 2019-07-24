@@ -93,6 +93,7 @@ app.put("/user/:phoneNumber", async (req, res, next) => {
     let updatedUser = await User.update(userFields, {
       where: { phoneNumber },
       returning: true,
+      plain: true,
       include: [{ model: Response, as: "Responses" }]
     });
     // const userData = await User.findOne({
