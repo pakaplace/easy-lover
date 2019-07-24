@@ -96,12 +96,12 @@ app.put("/user/:phoneNumber", async (req, res, next) => {
       plain: true,
       include: [{ model: Response, as: "Responses" }]
     });
-    if (updatedUser) {
-      const foundResponse = await Response.findOne({
-        where: { userId: updatedUser.user[1].id }
-      });
-      res.status(200).send({ user: updatedUser, response: foundResponse });
-    }
+    // if (updatedUser) {
+    //   const foundResponse = await Response.findOne({
+    //     where: { userId: updatedUser.user[1].id }
+    //   });
+    //   res.status(200).send({ user: updatedUser, response: foundResponse });
+    // }
     console.log("Updated User Data~ ", updatedUser);
     res.status(200).send({ user: updatedUser });
   } catch (e) {
