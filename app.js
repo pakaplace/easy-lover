@@ -84,7 +84,7 @@ app.post("/user", async (req, res, next) => {
 });
 
 app.put("/user/:phoneNumber", async (req, res, next) => {
-  const { phoneNumber } = req.query;
+  const { phoneNumber } = req.params;
   if (!req.params.phoneNumber) {
     res.status(206).send({ error: "Phone Number required in PUT request." });
   }
