@@ -13,7 +13,7 @@ const client = require("twilio")(
 );
 const cors = require("cors");
 
-models.sequelize.sync();
+models.sequelize.sync({ force: true });
 // Middleware
 app.use(helmet());
 app.use(require("./middlewares/BodyParser"));
@@ -88,6 +88,7 @@ app.put("/user/:id", async (req, res, next) => {
     res.status(206).send({ error: "User Id required in PUT request." });
   }
   try {
+    const { phoneNumber } = req.query;
     const { userFields } = req.body;
     let updatedUser = await User.update(userFields, {
       where: { id: req.params.id }
@@ -121,16 +122,29 @@ app.put("/user/:id", async (req, res, next) => {
 // });
 // Returns user data and response
 
-app.get("/user", async (req, res, next) => {
-  const { id, phoneNumber } = req.query;
+app.get("/user/:id", async (req, res, next) => {
+  const { id } = req.params;
+  const { phoneNumber } = req.query;
   try {
-    if (!id || !phoneNumber) {
-      return res.status(400).send({ error: "You must include a User Id" });
+    if (!id && !phoneNumber) {
+      return res.status(400).send({
+        error:
+          "You must include a User Id in the req.params or a phone number in the query args"
+      });
     }
     console.log("Phone Number", phoneNumber, id);
     const foundUser = await User.findOne({
       where: {
-        phoneNumber
+        [Op.or]: [
+          {
+            id
+          },
+          {
+            phoneNumber: {
+              [Op.iLike]: userFields.phoneNumber
+            }
+          }
+        ]
       },
       include: [
         {
