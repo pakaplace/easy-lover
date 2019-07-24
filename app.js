@@ -84,23 +84,21 @@ app.post("/user", async (req, res, next) => {
 });
 
 app.put("/user/:phoneNumber", async (req, res, next) => {
-  if (!req.params.id) {
-    res.status(206).send({ error: "User Id required in PUT request." });
+  const { phoneNumber } = req.query;
+  if (!req.params.phoneNumber) {
+    res.status(206).send({ error: "Phone Number required in PUT request." });
   }
   try {
-    const { phoneNumber } = req.query;
     const { userFields } = req.body;
     let updatedUser = await User.update(userFields, {
-      where: { id: req.params.id }
-    });
-
-    console.log("Updated User", updatedUser[0]);
-    const userData = await User.findOne({
-      where: { id: req.params.id },
+      where: { phoneNumber },
       include: [{ model: Response, as: "Responses" }]
     });
-    console.log("Updated User Data~ ", userData);
-    res.status(200).send({ user: userData });
+    // const userData = await User.findOne({
+    //   where: { id: req.params.id }
+    // });
+    console.log("Updated User Data~ ", updatedUser);
+    res.status(200).send({ user: updatedUser });
   } catch (e) {
     return res.status(200).send({ error: e.message });
   }
