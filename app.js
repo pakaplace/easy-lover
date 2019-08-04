@@ -208,10 +208,12 @@ app.post("/response", async (req, res, next) => {
       include: [{ model: User, as: "User" }]
     });
     if (existingResponse) {
-      console.log(
-        "User has already submitted a response for this survey",
-        existingResponse
-      );
+      res
+        .status(206)
+        .send({
+          error: "User has already submitted a response for this survey",
+          existingResponse
+        });
       res.status(206).send({
         error: "User has already submitted a response for this survey"
       });
@@ -223,14 +225,17 @@ app.post("/response", async (req, res, next) => {
       "\n ResponseFields",
       responseFields
     );
-
-    let foundUser = await User.findOne({ id: responseFields.userId });
+    let foundUser = await User.findOne({
+      where: {
+        id: responseFields.userId
+      }
+    });
     if (!foundUser) {
       return res
         .status(206)
         .send({ error: "No user with that phone number was found." });
     }
-    console.log("Found user", foundUser.dataValues);
+    console.log("Existing User?", foundUser.dataValues);
     let message = await client.messages.create({
       body: `Your link is https://${process.env.HOST_URL}/user?phoneNumber=${
         foundUser.phoneNumber
