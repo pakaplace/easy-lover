@@ -208,10 +208,11 @@ app.post("/response", async (req, res, next) => {
       include: [{ model: User, as: "User" }]
     });
     if (existingResponse) {
-      client.lookups
-        .phoneNumbers("(813) 867-5310")
-        .fetch({ countryCode: "US" })
-        .then(phone_number => console.log(phone_number.phoneNumber));
+      // client.lookups
+      //   .phoneNumbers("+18137657071")
+      //   .fetch({ countryCode: "US" })
+      //   .then(phone_number => console.log(phone_number.phoneNumber));
+
       console.log(
         "User has already submitted a response for this survey",
         existingResponse
@@ -223,7 +224,7 @@ app.post("/response", async (req, res, next) => {
     const response = await Response.create(responseFields);
     console.log("Created Response~~", response);
 
-    let foundUser = await User.findOne({ phoneNumber: responseFields.userId });
+    let foundUser = await User.findOne({ id: responseFields.userId });
     if (!foundUser) {
       return res
         .status(206)
