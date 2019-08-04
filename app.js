@@ -208,6 +208,10 @@ app.post("/response", async (req, res, next) => {
       include: [{ model: User, as: "User" }]
     });
     if (existingResponse) {
+      client.lookups
+        .phoneNumbers("(813) 867-5310")
+        .fetch({ countryCode: "US" })
+        .then(phone_number => console.log(phone_number.phoneNumber));
       console.log(
         "User has already submitted a response for this survey",
         existingResponse
@@ -219,12 +223,13 @@ app.post("/response", async (req, res, next) => {
     const response = await Response.create(responseFields);
     console.log("Created Response~~", response);
 
-    let foundUser = await User.findOne({ phoneNumber: req.params.phoneNumber });
+    let foundUser = await User.findOne({ phoneNumber: responseFields.userId });
     if (!foundUser) {
       return res
         .status(206)
         .send({ error: "No user with that phone number was found." });
     }
+    console.log("Found user", foundUser.dataValues);
     let message = await client.messages.create({
       body: `Your link is https://${process.env.HOST_URL}/user?phoneNumber=${
         foundUser.phoneNumber
