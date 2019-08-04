@@ -52,6 +52,12 @@ app.get("/sendlink/:phoneNumber", async (req, res, next) => {
 // User Routes
 app.post("/user", async (req, res, next) => {
   const { userFields } = req.body;
+  let twilioRes = client.lookups
+    .phoneNumbers("(510) 867-5310")
+    .fetch({ countryCode: "US" });
+
+  console.log("Phone Number validation", twilioRes);
+
   try {
     const existingUser = await User.findOne({
       where: {
@@ -71,9 +77,7 @@ app.post("/user", async (req, res, next) => {
     });
     console.log("Existing User~~~", existingUser);
     if (existingUser) {
-      return res.status(206).send({
-        error: "A user with that phone number or email already exists."
-      });
+      return res.status(200).send({ user: existingUser });
     }
     const user = await User.create(userFields);
     console.log("Created User~~~", user);
@@ -208,12 +212,10 @@ app.post("/response", async (req, res, next) => {
       include: [{ model: User, as: "User" }]
     });
     if (existingResponse) {
-      res
-        .status(206)
-        .send({
-          error: "User has already submitted a response for this survey",
-          existingResponse
-        });
+      res.status(206).send({
+        error: "User has already submitted a response for this survey",
+        existingResponse
+      });
       res.status(206).send({
         error: "User has already submitted a response for this survey"
       });
