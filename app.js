@@ -49,14 +49,25 @@ app.get("/sendlink/:phoneNumber", async (req, res, next) => {
   }
 });
 
+app.get("/verifyNumber/:phoneNumber", async (req, res, next) => {
+  client.lookups
+    .phoneNumbers(req.params.phoneNumber)
+    .fetch()
+    .then(phone_number => {
+      console.log("Phone Number is verified", phone_number);
+      res.status(200).send("Phone number is verified");
+    })
+    .catch(error => {
+      res.status(206).send({ error });
+    });
+});
+
 // User Routes
 app.post("/user", async (req, res, next) => {
   const { userFields } = req.body;
-  let twilioRes = client.lookups
-    .phoneNumbers("(510) 867-5310")
-    .fetch({ countryCode: "US" });
+  console.log("heryasd");
 
-  console.log("Phone Number validation", twilioRes);
+  // console.log("Phone Number validation", twilioRes);
 
   try {
     const existingUser = await User.findOne({
@@ -138,6 +149,16 @@ app.get("/user/:phoneNumber", async (req, res, next) => {
         error: "You must include a phone number the req.params"
       });
     }
+    client.lookups
+      .phoneNumbers(phoneNumber)
+      .fetch({ countryCode: "US" })
+      .then(phone_number => {
+        console.log("Phone Number is verified", phone_number);
+      })
+      .catch(error => {
+        res.status(206).send({ error });
+      });
+
     const foundUser = await User.findOne({
       where: {
         phoneNumber
