@@ -230,7 +230,7 @@ app.post("/response", async (req, res, next) => {
         foundUser.phoneNumber
       }`,
       from: process.env.TWILIO_PROD_NUMBER,
-      to: "+1" + foundUser.phoneNumber
+      to: foundUser.phoneNumber
     });
     res.status(200).send({ response });
   } catch (error) {
