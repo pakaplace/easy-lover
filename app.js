@@ -73,7 +73,8 @@ app.post("/user", async (req, res, next) => {
             }
           }
         ]
-      }
+      },
+      include: [{ model: Response, as: "Responses" }]
     });
     console.log("Existing User~~~", existingUser);
     if (existingUser) {
