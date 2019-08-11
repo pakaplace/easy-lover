@@ -186,13 +186,13 @@ app.get("/user/:phoneNumber", async (req, res, next) => {
   }
 });
 
-app.get("/users", async (req, res, next) => {
-  const users = await User.findAll({
-    attributes: ["id", "firstName", "lastName", "phoneNumber"],
-    raw: true
-  });
-  return res.status(200).send({ users });
-});
+// app.get("/users", async (req, res, next) => {
+//   const users = await User.findAll({
+//     attributes: ["id", "firstName", "lastName", "phoneNumber"],
+//     raw: true
+//   });
+//   return res.status(200).send({ users });
+// });
 
 app.post("/survey", async (req, res, next) => {
   const { surveyFields } = req.body;
