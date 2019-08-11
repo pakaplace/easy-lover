@@ -4,14 +4,16 @@ const app = express();
 const expressWs = require("express-ws")(app);
 const port = process.env.PORT || 4000;
 const helmet = require("helmet");
-const { Survey, User, Response, Interaction } = require("./models");
+const cors = require("cors");
 const { Op } = require("sequelize");
 const models = require("./models/index");
+const { Survey, User, Response, Interaction } = require("./models");
 const client = require("twilio")(
   process.env.TWILIO_PROD_SID,
   process.env.TWILIO_PROD_TOKEN
 );
-const cors = require("cors");
+const compareTwoResponses = require("./utils/compareTwoResponses");
+const _ = require("lodash");
 
 models.sequelize.sync();
 // Middleware
@@ -50,6 +52,7 @@ app.get("/sendlink/:phoneNumber", async (req, res, next) => {
 });
 
 app.get("/verifyNumber/:phoneNumber", async (req, res, next) => {
+  console.log(req.params.phoneNumber);
   client.lookups
     .phoneNumbers(req.params.phoneNumber)
     .fetch()
@@ -293,52 +296,70 @@ app.get("/response/:id", async (req, res, next) => {
   }
 });
 
+app.post("/ranking", async (req, res, next) => {
+  const { surveyId, fromUserId, toUserId } = req.body;
+
+  try {
+  } catch (err) {}
+});
 // Compare the two user's responses and return a score object + the follow up questionssend
 app.post("/compare", async (req, res, next) => {
-  const {
-    surveyId,
-    fromUserId,
-    toUserId,
-    compatibilityScore, // Should this be on the frontend?
-    question1,
-    question2,
-    question3,
-    question4
-  } = req.params;
-  try {
-    const fromUserResponse = await Response.findOne({
-      where: {
-        surveyId,
-        userId: fromUserId
-      }
-    });
-    console.log("fromUserResponse", fromUserResponse.dataValues);
-    const toUserResponse = await Response.findOne({
-      where: {
-        surveyId,
-        userId: toUserId
-      }
-    });
-    console.log("toUserResponse", toUserResponse.dataValues);
-    console.log(
-      `User 1 Response ${fromUserResponse} \n User 2 Response ${toUserResponse}`
-    );
+  const { fromUserId, toUserId, fromResponseJson, surveyId } = req.body;
 
+  try {
+    const allResponses = await Response.findAll({
+      where: { userId: { [Op.not]: fromUserId } },
+      raw: true
+    });
+
+    const allMatches = [];
+    allResponses.forEach((response, i) => {
+      let result = compareTwoResponses(fromResponseJson, response.answersJson);
+      allMatches.push({
+        score: result.score,
+        sharedAnswers: result.sharedAnswers,
+        fromUserId,
+        toUserId: response.userId
+      });
+    });
+    const rankedMatches = _.sortBy(allMatches, ["score"]).reverse();
+
+    const rank = _.findIndex(rankedMatches, { toUserId });
+
+    const { score, sharedAnswers } = rankedMatches[rank];
+    const totalPlayers = rankedMatches.length;
+    const existingInteraction = await Interaction.findOne({
+      where: { fromUserId, toUserId, surveyId }
+    });
+    if (existingInteraction) {
+      res.status(200).send({
+        rank,
+        totalPlayers,
+        score,
+        interactionId: existingInteraction.id,
+        sharedAnswers,
+        rankedMatches
+      });
+    }
     const interaction = await Interaction.create({
       surveyId,
       fromUserId,
       toUserId,
-      compatibilityScore,
-      question1,
-      question2,
-      question3,
-      question4
+      compatibilityScore: score
+    });
+    res.status(200).send({
+      rank,
+      totalPlayers,
+      score,
+      sharedAnswers,
+      interactionId: interaction.id,
+      rankedMatches
     });
 
-    res.status(200).send({ interaction });
     // WS updates sent here
-  } catch (e) {
-    return res.status(206).send({ error: err.message });
+  } catch (err) {
+    console.log(err);
+    return res.status(206).send({ err });
   }
 });
 

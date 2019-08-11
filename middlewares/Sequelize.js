@@ -14,7 +14,7 @@ if (process.env.NODE_ENV === "local") {
     database: process.env.POSTGRES_DB,
     host: process.env.POSTGRES_HOST,
     dialect: "postgres",
-    port: process.env.POSTGRES_PORT || "5432"
+    port: "5432"
   });
   // sequelize = new Sequelize(process.env.DATABASE_URL, {
   //   dialect: "postgres",
@@ -30,6 +30,7 @@ if (process.env.NODE_ENV === "local") {
   //   }
   // });
 } else {
+  console.log("Reached");
   sequelize = new Sequelize(process.env.POSTGRES_URL, {
     dialect: "postgres",
     operatorsAliases: false,
