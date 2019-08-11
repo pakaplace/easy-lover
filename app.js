@@ -313,14 +313,17 @@ app.post("/compare", async (req, res, next) => {
     });
 
     const allMatches = [];
+    console.log("All responses", allResponses);
     allResponses.forEach((response, i) => {
       let result = compareTwoResponses(fromResponseJson, response.answersJson);
-      allMatches.push({
-        score: result.score,
-        sharedAnswers: result.sharedAnswers,
-        fromUserId,
-        toUserId: response.userId
-      });
+      if (result) {
+        allMatches.push({
+          score: result.score,
+          sharedAnswers: result.sharedAnswers,
+          fromUserId,
+          toUserId: response.userId
+        });
+      }
     });
     const rankedMatches = _.sortBy(allMatches, ["score"]).reverse();
 

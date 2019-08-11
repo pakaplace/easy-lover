@@ -1,5 +1,10 @@
 const compareTwoResponses = (response, response1) => {
+  console.log("Lengths", response.length, response1.length);
   if (response.length !== response1.length) {
+    console.log(
+      "Responses should contain same number of questions and answers"
+    );
+    return;
     throw Error(
       "Responses should contain same number of questions and answers."
     );
