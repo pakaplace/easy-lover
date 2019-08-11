@@ -339,10 +339,10 @@ app.post("/compare", async (req, res, next) => {
     });
     const rankedMatches = _.sortBy(allMatches, ["score"]).reverse();
 
-    const rank = _.findIndex(rankedMatches, { toUserId });
+    const rank = _.findIndex(rankedMatches, { toUserId }) + 1;
 
     const { score, sharedAnswers } = rankedMatches[rank];
-    const totalPlayers = rankedMatches.length;
+    const totalPlayers = rankedMatches.length + 1;
     const existingInteraction = await Interaction.findOne({
       where: { fromUserId, toUserId, surveyId }
     });
