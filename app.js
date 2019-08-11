@@ -304,18 +304,28 @@ app.post("/ranking", async (req, res, next) => {
 });
 // Compare the two user's responses and return a score object + the follow up questionssend
 app.post("/compare", async (req, res, next) => {
-  const { fromUserId, toUserId, fromResponseJson, surveyId } = req.body;
+  const { fromUserId, toUserId, surveyId } = req.body;
 
   try {
+    const fromResponse = await Response.findOne({
+      where: { userId: fromUserId, surveyId }
+    });
+    if (!fromResponse) {
+      return res
+        .status(206)
+        .send({ err: "User has not yet created a response" });
+    }
     const allResponses = await Response.findAll({
       where: { userId: { [Op.not]: fromUserId } },
       raw: true
     });
 
     const allMatches = [];
-    console.log("All responses", allResponses);
-    allResponses.forEach((response, i) => {
-      let result = compareTwoResponses(fromResponseJson, response.answersJson);
+    allResponses.forEach(response => {
+      let result = compareTwoResponses(
+        fromResponse.answersJson,
+        response.answersJson
+      );
       if (result) {
         allMatches.push({
           score: result.score,
@@ -340,8 +350,7 @@ app.post("/compare", async (req, res, next) => {
         totalPlayers,
         score,
         interactionId: existingInteraction.id,
-        sharedAnswers,
-        rankedMatches
+        sharedAnswers
       });
     }
     const interaction = await Interaction.create({
