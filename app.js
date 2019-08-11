@@ -311,12 +311,14 @@ app.post("/compare", async (req, res, next) => {
       where: { userId: fromUserId, surveyId }
     });
     if (!fromResponse) {
-      return res
-        .status(206)
-        .send({ err: "User has not yet created a response" });
+      return res.status(206).send({
+        err: "From User has not yet created a response with surveyId ",
+        surveyId
+      });
+      ``;
     }
     const allResponses = await Response.findAll({
-      where: { userId: { [Op.not]: fromUserId } },
+      where: { userId: { [Op.not]: fromUserId }, surveyId: surveyId },
       raw: true
     });
 
