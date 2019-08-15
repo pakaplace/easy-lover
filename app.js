@@ -2,6 +2,9 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const expressWs = require("express-ws")(app);
+var server = require("http").Server(app);
+var io = require("socket.io")(server);
+
 const port = process.env.PORT || 4000;
 const helmet = require("helmet");
 const cors = require("cors");
@@ -14,6 +17,7 @@ const client = require("twilio")(
 );
 const compareTwoResponses = require("./utils/compareTwoResponses");
 const _ = require("lodash");
+const isUUID = require("./utils/isUUID");
 
 models.sequelize.sync();
 // Middleware
@@ -24,6 +28,32 @@ var corsOptions = {
   optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 app.use(cors(corsOptions));
+
+app.ws("/", async (ws, req) => {
+  ws.on("message", function(msg) {
+    const parsedMsg = JSON.parse(msg);
+    const { fromUserId, toUserId, surveyId } = parsedMsg;
+    if (fromUserId && toUserId && surveyId) {
+      // tell phone with toUserId to call /compare route instead of looking up the
+      // existing interaction, because the two users' results will be different
+      if (isUUID(fromUserId) && isUUID(toUserId)) {
+        console.log("hereyo");
+        ws.send(
+          JSON.stringify({
+            userToUpdate: toUserId,
+            //reversed, because the other user will be making the compare route
+            compareParams: {
+              fromUserId: toUserId,
+              toUserId: fromUserId,
+              surveyId
+            }
+          })
+        );
+      }
+    }
+  });
+  console.log("socket", req.testing);
+});
 
 app.get("/", (req, res, next) => {
   res.status(200).send("hello jon");
@@ -302,8 +332,10 @@ app.post("/ranking", async (req, res, next) => {
   try {
   } catch (err) {}
 });
-// Compare the two user's responses and return a score object + the follow up questionssend
+// Compare the two user's responses and return a score object + the follow up questions send
+
 app.post("/compare", async (req, res, next) => {
+  //Send websockets event
   const { fromUserId, toUserId, surveyId } = req.body;
 
   try {
@@ -338,23 +370,26 @@ app.post("/compare", async (req, res, next) => {
       }
     });
     const rankedMatches = _.sortBy(allMatches, ["score"]).reverse();
-
-    const rank = _.findIndex(rankedMatches, { toUserId }) + 1;
-
+    const rank = _.findIndex(rankedMatches, { toUserId });
+    console.log("SANITY");
+    console.log("Ranked Matches", rankedMatches);
+    console.log("Route Match", rankedMatches[rank]);
     const { score, sharedAnswers } = rankedMatches[rank];
     const totalPlayers = rankedMatches.length + 1;
+    const actualRank = rank + 1;
     const existingInteraction = await Interaction.findOne({
       where: { fromUserId, toUserId, surveyId }
     });
-    if (existingInteraction) {
-      res.status(200).send({
-        rank,
-        totalPlayers,
-        score,
-        interactionId: existingInteraction.id,
-        sharedAnswers
-      });
-    }
+    // if (existingInteraction) {
+    //   console.log("Found existing interaction");
+    //   res.status(200).send({
+    //     rank,
+    //     totalPlayers,
+    //     score,
+    //     interactionId: existingInteraction.id,
+    //     sharedAnswers
+    //   });
+    // }
     const interaction = await Interaction.create({
       surveyId,
       fromUserId,
@@ -362,7 +397,7 @@ app.post("/compare", async (req, res, next) => {
       compatibilityScore: score
     });
     res.status(200).send({
-      rank,
+      rank: actualRank,
       totalPlayers,
       score,
       sharedAnswers,
@@ -376,7 +411,6 @@ app.post("/compare", async (req, res, next) => {
     return res.status(206).send({ err });
   }
 });
-
 app.get("/interaction/:id", async (req, res, next) => {
   const { id } = req.params;
   try {
@@ -397,7 +431,80 @@ app.get("/interaction/:id", async (req, res, next) => {
   }
 });
 
-app
+const clients = {};
+io.on("connection", function(socket) {
+  console.log("socket asd", socket.id);
+  socket.on("msg", function(hello) {
+    console.log("hello", hello);
+  });
+  socket.on("STORE_USER_ID", function(data) {
+    if (data.socketId && data.userId) {
+      clients[data.userId] = data.socketId;
+    }
+    console.log("Clients~~~~", clients);
+    socket.emit("SCANNED_ALL", "message 123");
+  });
+  socket.on("COMPARE", async data => {
+    console.log("Reached BE Compare~", data);
+    const { scannedUserId, scanningUserId, surveyId } = data;
+    if (
+      isUUID(scannedUserId) &&
+      isUUID(scanningUserId) &&
+      clients[scannedUserId]
+    ) {
+      console.log("Inside IF statement");
+      // console.log("Emitting SCANNED_YOU event", clients[fromUserId]);
+      const fromResponse = await Response.findOne({
+        where: { userId: scannedUserId, surveyId }
+      });
+      const allResponses = await Response.findAll({
+        where: { userId: { [Op.not]: scannedUserId }, surveyId: surveyId },
+        raw: true
+      });
+      const allMatches = [];
+      allResponses.forEach(response => {
+        let result = compareTwoResponses(
+          fromResponse.answersJson,
+          response.answersJson
+        );
+        if (result) {
+          allMatches.push({
+            score: result.score,
+            sharedAnswers: result.sharedAnswers,
+            fromUserId: scannedUserId,
+            toUserId: response.userId
+          });
+        }
+      });
+      const rankedMatches = _.sortBy(allMatches, ["score"]).reverse();
+      const rank = _.findIndex(rankedMatches, { toUserId: scanningUserId });
+      console.log("Socket Match", rankedMatches[rank]);
+      const { score, sharedAnswers } = rankedMatches[rank];
+      const totalPlayers = rankedMatches.length + 1;
+      //Sends to one socket
+      const actualRank = rank + 1;
+      io.to(clients[scannedUserId]).emit("SCANNED_YOU", {
+        rank: actualRank,
+        totalPlayers,
+        score,
+        sharedAnswers
+      });
+      socket.to(clients[scannedUserId]).emit("SCANNED_YOU", {
+        rank: actualRank,
+        totalPlayers,
+        score,
+        sharedAnswers,
+        asd: "asd"
+      });
+
+      //Goes to all sockets
+      // io.emit("SCANNED_YOU2", "TEST_MESSAGE3");
+    }
+    socket.emit();
+  });
+});
+
+server
   .listen(port, () => {
     console.log(`app listening on port ${port}`);
   })
