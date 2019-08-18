@@ -1,7 +1,6 @@
 require("dotenv").config();
 const express = require("express");
 const app = express();
-const expressWs = require("express-ws")(app);
 var server = require("http").Server(app);
 var io = require("socket.io")(server);
 
@@ -28,32 +27,6 @@ var corsOptions = {
   optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 app.use(cors(corsOptions));
-
-app.ws("/", async (ws, req) => {
-  ws.on("message", function(msg) {
-    const parsedMsg = JSON.parse(msg);
-    const { fromUserId, toUserId, surveyId } = parsedMsg;
-    if (fromUserId && toUserId && surveyId) {
-      // tell phone with toUserId to call /compare route instead of looking up the
-      // existing interaction, because the two users' results will be different
-      if (isUUID(fromUserId) && isUUID(toUserId)) {
-        console.log("hereyo");
-        ws.send(
-          JSON.stringify({
-            userToUpdate: toUserId,
-            //reversed, because the other user will be making the compare route
-            compareParams: {
-              fromUserId: toUserId,
-              toUserId: fromUserId,
-              surveyId
-            }
-          })
-        );
-      }
-    }
-  });
-  console.log("socket", req.testing);
-});
 
 app.get("/", (req, res, next) => {
   res.status(200).send("hello jon");
@@ -371,25 +344,21 @@ app.post("/compare", async (req, res, next) => {
     });
     const rankedMatches = _.sortBy(allMatches, ["score"]).reverse();
     const rank = _.findIndex(rankedMatches, { toUserId });
-    console.log("SANITY");
-    console.log("Ranked Matches", rankedMatches);
-    console.log("Route Match", rankedMatches[rank]);
     const { score, sharedAnswers } = rankedMatches[rank];
-    const totalPlayers = rankedMatches.length + 1;
+    const totalPlayers = rankedMatches.length;
     const actualRank = rank + 1;
     const existingInteraction = await Interaction.findOne({
       where: { fromUserId, toUserId, surveyId }
     });
-    // if (existingInteraction) {
-    //   console.log("Found existing interaction");
-    //   res.status(200).send({
-    //     rank,
-    //     totalPlayers,
-    //     score,
-    //     interactionId: existingInteraction.id,
-    //     sharedAnswers
-    //   });
-    // }
+    if (existingInteraction) {
+      res.status(200).send({
+        actualRank,
+        totalPlayers,
+        score,
+        interactionId: existingInteraction.id,
+        sharedAnswers
+      });
+    }
     const interaction = await Interaction.create({
       surveyId,
       fromUserId,
@@ -445,15 +414,16 @@ io.on("connection", function(socket) {
     socket.emit("SCANNED_ALL", "message 123");
   });
   socket.on("COMPARE", async data => {
-    console.log("Reached BE Compare~", data);
     const { scannedUserId, scanningUserId, surveyId } = data;
     if (
       isUUID(scannedUserId) &&
       isUUID(scanningUserId) &&
       clients[scannedUserId]
     ) {
-      console.log("Inside IF statement");
-      // console.log("Emitting SCANNED_YOU event", clients[fromUserId]);
+      const scanningUser = User.findOne({
+        where: { id: scanningUserId },
+        raw: true
+      });
       const fromResponse = await Response.findOne({
         where: { userId: scannedUserId, surveyId }
       });
@@ -478,27 +448,33 @@ io.on("connection", function(socket) {
       });
       const rankedMatches = _.sortBy(allMatches, ["score"]).reverse();
       const rank = _.findIndex(rankedMatches, { toUserId: scanningUserId });
-      console.log("Socket Match", rankedMatches[rank]);
       const { score, sharedAnswers } = rankedMatches[rank];
-      const totalPlayers = rankedMatches.length + 1;
+      const totalPlayers = rankedMatches.length;
       //Sends to one socket
       const actualRank = rank + 1;
-      io.to(clients[scannedUserId]).emit("SCANNED_YOU", {
-        rank: actualRank,
-        totalPlayers,
-        score,
-        sharedAnswers
-      });
       socket.to(clients[scannedUserId]).emit("SCANNED_YOU", {
         rank: actualRank,
         totalPlayers,
         score,
         sharedAnswers,
-        asd: "asd"
+        scanningUser,
+        eventType: "socket.to(id)"
       });
-
-      //Goes to all sockets
-      // io.emit("SCANNED_YOU2", "TEST_MESSAGE3");
+      let foundInteraction = await Interaction.findOne({
+        where: {
+          fromUserId: scanningUserId,
+          toUserId: scannedUserId,
+          surveyId
+        }
+      });
+      if (!foundInteraction) {
+        Interaction.create({
+          surveyId,
+          fromUserId,
+          toUserId,
+          compatibilityScore: score
+        });
+      }
     }
     socket.emit();
   });
