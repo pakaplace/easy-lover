@@ -266,13 +266,13 @@ app.post("/response", async (req, res, next) => {
         .send({ error: "No user with that phone number was found." });
     }
     console.log("Existing User?", foundUser.dataValues);
-    let message = await client.messages.create({
-      body: `Your link is https://${process.env.HOST_URL}/user?phoneNumber=${
-        foundUser.phoneNumber
-      }`,
-      from: process.env.TWILIO_PROD_NUMBER,
-      to: foundUser.phoneNumber
-    });
+    // let message = await client.messages.create({
+    //   body: `Your link is /${process.env.HOST_URL}/user?phoneNumber=${
+    //     foundUser.phoneNumber
+    //   }`,
+    //   from: process.env.TWILIO_PROD_NUMBER,
+    //   to: foundUser.phoneNumber
+    // });
     res.status(200).send({ response });
   } catch (error) {
     console.error("Error creating response~~", error);
@@ -352,7 +352,7 @@ app.post("/compare", async (req, res, next) => {
     });
     if (existingInteraction) {
       res.status(200).send({
-        actualRank,
+        rank: actualRank,
         totalPlayers,
         score,
         interactionId: existingInteraction.id,
