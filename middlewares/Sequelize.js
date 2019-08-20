@@ -11,24 +11,11 @@ const loggingOpts = {
 
 if (process.env.NODE_ENV === "local") {
   sequelize = new Sequelize({
-    database: process.env.POSTGRES_DB,
+    database: process.env.HEROKU_POSTGRESQL_NAVY_URL,
     host: process.env.POSTGRES_HOST,
     dialect: "postgres",
     port: "5432"
   });
-  // sequelize = new Sequelize(process.env.DATABASE_URL, {
-  //   dialect: "postgres",
-  //   operatorsAliases: false,
-  //   logging: loggingOpts[process.env.SEQUELIZE_LOGGING || 0],
-  //   protocol: "postgres",
-  //   dialectOptions: {
-  //     ssl: true,
-  //     statement_timeout: 5000
-  //   },
-  //   define: {
-  //     paranoid: true
-  //   }
-  // });
 } else {
   console.log("Reached");
   sequelize = new Sequelize(process.env.POSTGRES_URL, {

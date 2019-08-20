@@ -18,7 +18,7 @@ const compareTwoResponses = require("./utils/compareTwoResponses");
 const _ = require("lodash");
 const isUUID = require("./utils/isUUID");
 
-models.sequelize.sync();
+models.sequelize.sync({ force: true });
 // Middleware
 app.use(helmet());
 app.use(require("./middlewares/BodyParser"));
@@ -71,10 +71,6 @@ app.get("/verifyNumber/:phoneNumber", async (req, res, next) => {
 // User Routes
 app.post("/user", async (req, res, next) => {
   const { userFields } = req.body;
-  console.log("heryasd");
-
-  // console.log("Phone Number validation", twilioRes);
-
   try {
     const existingUser = await User.findOne({
       where: {
@@ -402,16 +398,11 @@ app.get("/interaction/:id", async (req, res, next) => {
 
 const clients = {};
 io.on("connection", function(socket) {
-  console.log("socket asd", socket.id);
-  socket.on("msg", function(hello) {
-    console.log("hello", hello);
-  });
   socket.on("STORE_USER_ID", function(data) {
     if (data.socketId && data.userId) {
       clients[data.userId] = data.socketId;
     }
-    console.log("Clients~~~~", clients);
-    socket.emit("SCANNED_ALL", "message 123");
+    console.log("All Clients~~~~", clients);
   });
   socket.on("COMPARE", async data => {
     const { scannedUserId, scanningUserId, surveyId } = data;
