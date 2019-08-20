@@ -55,7 +55,6 @@ app.get("/sendlink/:phoneNumber", async (req, res, next) => {
 });
 
 app.get("/verifyNumber/:phoneNumber", async (req, res, next) => {
-  console.log(req.params.phoneNumber);
   client.lookups
     .phoneNumbers(req.params.phoneNumber)
     .fetch()
