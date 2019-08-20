@@ -18,7 +18,7 @@ const compareTwoResponses = require("./utils/compareTwoResponses");
 const _ = require("lodash");
 const isUUID = require("./utils/isUUID");
 
-models.sequelize.sync({ force: true });
+models.sequelize.sync();
 // Middleware
 app.use(helmet());
 app.use(require("./middlewares/BodyParser"));
