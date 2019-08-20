@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
         field: "lastName",
         allowNull: false
       },
-      gender: {
+      sex: {
         type: DataTypes.STRING(256),
         field: "gender",
         allowNull: true
