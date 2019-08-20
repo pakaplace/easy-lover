@@ -19,11 +19,16 @@ module.exports = (sequelize, DataTypes) => {
         field: "lastName",
         allowNull: false
       },
+      gender: {
+        type: DataTypes.STRING(256),
+        field: "gender",
+        allowNull: false
+      },
       email: {
         type: DataTypes.STRING(256),
         field: "email",
         allowNull: true,
-        unique: true
+        unique: false
       },
       phoneNumber: {
         type: DataTypes.STRING(256),
