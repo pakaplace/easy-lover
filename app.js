@@ -250,21 +250,8 @@ app.post("/response", async (req, res, next) => {
       "\n ResponseFields",
       responseFields
     );
-    let foundUser = await User.findOne({
-      where: {
-        id: responseFields.userId
-      }
-    });
-    if (!foundUser) {
-      return res
-        .status(206)
-        .send({ error: "No user with that phone number was found." });
-    }
-    console.log("Existing User?", foundUser.dataValues);
-    let message = await client.messages.create({
-      body: `Your link is ${process.env.HOST_URL}/user?phoneNumber=${
-        foundUser.phoneNumber
-      }`,
+    await client.messages.create({
+      body: `Thank you for signing up. You can return and login with your phone number at inreallife.io`,
       from: process.env.TWILIO_PROD_NUMBER,
       to: foundUser.phoneNumber
     });
