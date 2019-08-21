@@ -73,28 +73,19 @@ app.post("/user", async (req, res, next) => {
   try {
     const existingUser = await User.findOne({
       where: {
-        [Op.or]: [
-          {
-            email: {
-              [Op.iLike]: userFields.email
-            }
-          },
-          {
-            phoneNumber: {
-              [Op.iLike]: userFields.phoneNumber
-            }
-          }
-        ]
+        phoneNumber: {
+          [Op.iLike]: userFields.phoneNumber
+        }
       },
       include: [{ model: Response, as: "Responses" }]
     });
     console.log("Existing User~~~", existingUser);
     if (existingUser) {
-      return res.status(200).send({ user: existingUser });
+      return res.status(200).send({ user: existingUser, existing: true });
     }
     const user = await User.create(userFields);
     console.log("Created User~~~", user);
-    res.status(200).send({ user });
+    res.status(200).send({ user, existing: false });
   } catch (e) {
     return res.status(206).send({ error: e.message });
   }
