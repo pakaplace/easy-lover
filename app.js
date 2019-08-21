@@ -397,7 +397,7 @@ io.on("connection", function(socket) {
       isUUID(scanningUserId) &&
       clients[scannedUserId]
     ) {
-      const scanningUser = User.findOne({
+      const scanningUser = await User.findOne({
         where: { id: scanningUserId },
         raw: true
       });
