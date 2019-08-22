@@ -435,6 +435,11 @@ io.on("connection", function (socket) {
       const totalPlayers = rankedMatches.length;
       //Sends to one socket
       const actualRank = rank + 1;
+      console.log("Socket SCANNED_YOU Respons", actualRank,
+        totalPlayers,
+        score,
+        sharedAnswers,
+        scanningUser)
       socket.to(clients[scannedUserId]).emit("SCANNED_YOU", {
         rank: actualRank,
         totalPlayers,
