@@ -272,12 +272,7 @@ app.get("/response/:id", async (req, res, next) => {
   }
 });
 
-app.post("/ranking", async (req, res, next) => {
-  const { surveyId, fromUserId, toUserId } = req.body;
 
-  try {
-  } catch (err) {}
-});
 // Compare the two user's responses and return a score object + the follow up questions send
 
 app.post("/compare", async (req, res, next) => {
@@ -373,9 +368,29 @@ app.get("/interaction/:id", async (req, res, next) => {
   }
 });
 
+// app.put("/interaction", async (req, res) => {
+//   const { id, questions } = req.body;
+//   try {
+//     let foundInteraction = await Interaction.update(questions, {
+//       where: {
+//         id
+//       }
+//     });
+//     if (!foundInteraction) {
+//       return res
+//         .send(206)
+//         .send({ error: `Interaction with id ${id} does not exist...` });
+//     }
+
+//     return res.status(200).send({ interaction: foundInteraction });
+//   } catch (e) {
+//     return res.status(206).send({ error: err.message });
+//   }
+// })
+
 const clients = {};
-io.on("connection", function(socket) {
-  socket.on("STORE_USER_ID", function(data) {
+io.on("connection", function (socket) {
+  socket.on("STORE_USER_ID", function (data) {
     if (data.socketId && data.userId) {
       clients[data.userId] = data.socketId;
     }
