@@ -3,20 +3,21 @@ const express = require("express");
 const app = express();
 var server = require("http").Server(app);
 var io = require("socket.io")(server);
-
 const port = process.env.PORT || 4000;
 const helmet = require("helmet");
+const _ = require("lodash");
 const cors = require("cors");
 const { Op } = require("sequelize");
-const models = require("./models/index");
-const { Survey, User, Response, Interaction } = require("./models");
+
 const client = require("twilio")(
   process.env.TWILIO_PROD_SID,
   process.env.TWILIO_PROD_TOKEN
 );
-const compareTwoResponses = require("./utils/compareTwoResponses");
-const _ = require("lodash");
-const isUUID = require("./utils/isUUID");
+
+const models = require("./models/index");
+const { Survey, User, Response, Interaction } = require("./models");
+
+const { isUUID, ignoreIfFailed, compareTwoResponses } = require("./utils");
 
 models.sequelize.sync();
 // Middleware
@@ -31,7 +32,10 @@ app.use(cors(corsOptions));
 app.get("/", (req, res, next) => {
   res.status(200).send("hello jon");
 });
-
+/*
+  PHONE NUMBER used as userId
+*/
+// Refactor to check sender user id & token
 app.get("/sendlink/:phoneNumber", async (req, res, next) => {
   const { User } = models;
   const { phoneNumber } = req.params;
@@ -43,7 +47,7 @@ app.get("/sendlink/:phoneNumber", async (req, res, next) => {
   }
   try {
     let message = await client.messages.create({
-      body: `Your link is ${process.env.HOST_URL}/user/${foundUser.id}`,
+      body: `Join In Real Life link at ${process.env.HOST_URL}/user/${foundUser.id}`,
       from: process.env.TWILIO_PROD_NUMBER,
       to: foundUser.phoneNumber
     });
@@ -79,12 +83,10 @@ app.post("/user", async (req, res, next) => {
       },
       include: [{ model: Response, as: "Responses" }]
     });
-    console.log("Existing User~~~", existingUser);
     if (existingUser) {
       return res.status(200).send({ user: existingUser, existing: true });
     }
     const user = await User.create(userFields);
-    console.log("Created User~~~", user);
     res.status(200).send({ user, existing: false });
   } catch (e) {
     return res.status(206).send({ error: e.message });
@@ -104,13 +106,6 @@ app.put("/user/:phoneNumber", async (req, res, next) => {
       plain: true,
       include: [{ model: Response, as: "Responses" }]
     });
-    // if (updatedUser) {
-    //   const foundResponse = await Response.findOne({
-    //     where: { userId: updatedUser.user[1].id }
-    //   });
-    //   res.status(200).send({ user: updatedUser, response: foundResponse });
-    // }
-    console.log("Updated User Data~ ", updatedUser);
     res.status(200).send({ user: updatedUser });
   } catch (e) {
     return res.status(200).send({ error: e.message });
@@ -163,8 +158,6 @@ app.get("/user/:phoneNumber", async (req, res, next) => {
         }
       ]
     });
-
-    console.log("Found User", foundUser);
     //send url to user's phone number
     if (foundUser) return res.status(200).send({ user: foundUser });
     else {
@@ -175,20 +168,11 @@ app.get("/user/:phoneNumber", async (req, res, next) => {
   }
 });
 
-// app.get("/users", async (req, res, next) => {
-//   const users = await User.findAll({
-//     attributes: ["id", "firstName", "lastName", "phoneNumber"],
-//     raw: true
-//   });
-//   return res.status(200).send({ users });
-// });
-
 app.post("/survey", async (req, res, next) => {
   const { surveyFields } = req.body;
   try {
     const idNumber = Math.floor(1000 + Math.random() * 9000);
     const survey = await Survey.create({ idNumber, ...surveyFields });
-    console.log("Created survey~", survey);
     return res.status(200).send({ survey });
   } catch (e) {
     console.error("Error creating survey", e);
@@ -235,12 +219,6 @@ app.post("/response", async (req, res, next) => {
       });
     }
     const response = await Response.create(responseFields);
-    console.log(
-      "Created Response~~",
-      response,
-      "\n ResponseFields",
-      responseFields
-    );
     await client.messages.create({
       body: `Thank you for signing up. You can return and login with your phone number at inreallife.io`,
       from: process.env.TWILIO_PROD_NUMBER,
@@ -248,7 +226,6 @@ app.post("/response", async (req, res, next) => {
     });
     res.status(200).send({ response });
   } catch (error) {
-    console.error("Error creating response~~", error);
     return res.status(206).send({ error });
   }
 });
@@ -272,8 +249,7 @@ app.get("/response/:id", async (req, res, next) => {
   }
 });
 
-
-// Compare the two user's responses and return a score object + the follow up questions send
+// Compare the two user's responses and return a score object to the other phone
 
 app.post("/compare", async (req, res, next) => {
   //Send websockets event
@@ -310,39 +286,42 @@ app.post("/compare", async (req, res, next) => {
         });
       }
     });
-    const rankedMatches = _.sortBy(allMatches, ["score"]).reverse();
-    const rank = _.findIndex(rankedMatches, { toUserId });
-    const { score, sharedAnswers } = rankedMatches[rank];
-    const totalPlayers = rankedMatches.length;
-    const actualRank = rank + 1;
+    // Check if already scanned
     const existingInteraction = await Interaction.findOne({
       where: { fromUserId, toUserId, surveyId }
     });
     if (existingInteraction) {
-      res.status(200).send({
+      return res.status(200).send({
         rank: actualRank,
         totalPlayers,
         score,
         interactionId: existingInteraction.id,
         sharedAnswers
       });
-    }
-    const interaction = await Interaction.create({
-      surveyId,
-      fromUserId,
-      toUserId,
-      compatibilityScore: score
-    });
-    res.status(200).send({
-      rank: actualRank,
-      totalPlayers,
-      score,
-      sharedAnswers,
-      interactionId: interaction.id,
-      rankedMatches
-    });
+    } else {
+      // Determine rank, asbtract into util and refactor this
+      const rankedMatches = _.sortBy(allMatches, ["score"]).reverse();
+      const rank = _.findIndex(rankedMatches, { toUserId });
+      const { score, sharedAnswers } = rankedMatches[rank];
+      const totalPlayers = rankedMatches.length;
+      const actualRank = rank + 1;
 
-    // WS updates sent here
+      const interaction = await Interaction.create({
+        surveyId,
+        fromUserId,
+        toUserId,
+        compatibilityScore: score
+      });
+
+      res.status(200).send({
+        rank: actualRank,
+        totalPlayers,
+        score,
+        sharedAnswers,
+        interactionId: interaction.id,
+        rankedMatches
+      });
+    }
   } catch (err) {
     console.log(err);
     return res.status(206).send({ err });
@@ -388,14 +367,18 @@ app.get("/interaction/:id", async (req, res, next) => {
 //   }
 // })
 
+// WEB SOCKETS
 const clients = {};
-io.on("connection", function (socket) {
-  socket.on("STORE_USER_ID", function (data) {
+
+// Establish socket connection
+io.on("connection", function(socket) {
+  socket.on("STORE_USER_ID", function(data) {
     if (data.socketId && data.userId) {
       clients[data.userId] = data.socketId;
     }
-    console.log("All Clients~~~~", clients);
   });
+
+  //
   socket.on("COMPARE", async data => {
     const { scannedUserId, scanningUserId, surveyId } = data;
     if (
@@ -435,11 +418,6 @@ io.on("connection", function (socket) {
       const totalPlayers = rankedMatches.length;
       //Sends to one socket
       const actualRank = rank + 1;
-      console.log("Socket SCANNED_YOU Respons", actualRank,
-        totalPlayers,
-        score,
-        sharedAnswers,
-        scanningUser)
       socket.to(clients[scannedUserId]).emit("SCANNED_YOU", {
         rank: actualRank,
         totalPlayers,

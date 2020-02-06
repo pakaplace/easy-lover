@@ -1,12 +1,31 @@
+const { isString } = require("lodash");
+console.log("isString", isString);
+
+const isUUID = id => {
+  const UUIDRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+  return isString(id) && UUIDRegex.test(id);
+};
+
+const ignoreIfFailed = async (result, operation) => {
+  const f = async () => {
+    return result;
+  };
+
+  try {
+    await f();
+  } catch (e) {
+    console.log(`Ignoring failure in operation: ${operationName}`, {
+      error: e
+    });
+  }
+};
+
 const compareTwoResponses = (response, response1) => {
   if (response.length !== response1.length) {
-    console.log(
+    console.error(
       "Responses should contain same number of questions and answers"
     );
     return;
-    throw Error(
-      "Responses should contain same number of questions and answers."
-    );
   }
   let score = 0;
   const sharedAnswers = [];
@@ -27,4 +46,8 @@ const compareTwoResponses = (response, response1) => {
   return { score, sharedAnswers };
 };
 
-module.exports = compareTwoResponses;
+module.exports = {
+  compareTwoResponses,
+  isUUID,
+  ignoreIfFailed
+};
