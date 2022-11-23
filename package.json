@@ -23,7 +23,7 @@
     "pg-hstore": "^2.3.3",
     "sequelize": "^5.9.4",
     "sequelize-auto-migrations": "^1.0.3",
-    "socket.io": "^2.2.0",
+    "socket.io": "^2.5.0",
     "terminal-kit": "^1.28.19",
     "twilio": "^3.33.1",
     "ws": "^7.1.0"
